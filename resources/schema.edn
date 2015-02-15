@@ -1,0 +1,87 @@
+
+[
+
+ ;; task
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :task/type
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A task's type"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :task/state
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "A task's state"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :task/repo
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A task's repo"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :task/commit
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A task's commit"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :task/params
+  :db/isComponent true
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db/doc "A task's params"
+  :db.install/_attribute :db.part/db}
+
+ ;; task states enum
+
+ {:db/id #db/id [:db.part/user], :db/ident :task.state/created}
+ {:db/id #db/id [:db.part/user], :db/ident :task.state/running}
+ {:db/id #db/id [:db.part/user], :db/ident :task.state/finished}
+ {:db/id #db/id [:db.part/user], :db/ident :task.state/crashed}
+
+ ;; parameter
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :param/name
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A param's name"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :param/value
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A param's value"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/user]
+  :db/ident :create-task
+  :db/fn #db/fn{:lang "clojure"
+                :params [db task]
+                :code '  (do
+                           (doseq [k #{:task :type :state :repo}]
+                             (when-not (k task)
+                               (throw (IllegalArgumentException. (str "Missing task " k)))))
+                           (let [e (tempid)]
+                             (conj (when (:params task)
+                                     (map (fn [[k v]]
+                                            {:db/id (tempid)
+                                             :task/_params e
+                                             :param/name k
+                                             :param/value v})
+                                          (:params task)))
+                                   {:db/id e
+                                    :task/type (:type task)
+                                    :task/state (:state task)
+                                    :task/repo (:repo task)
+                                    :task/commit (:commit task)})))}}
+
+ ]
